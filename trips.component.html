@@ -1,0 +1,98 @@
+<header class="app-header">
+  <h1>Travel Planner</h1>
+  <p>Plane und organisiere deine Reisen.</p>
+</header>
+
+<main class="app-content">
+  <section class="card shadow-sm p-4 mb-4 container">
+    <h2>Wohin möchtest du reisen?</h2>
+    <p class="text-muted">
+      Lege hier eine neue Reise in deinem Travel Planner an.
+    </p>
+
+    <form (ngSubmit)="addTrip()">
+      <div class="mb-3">
+        <label for="destination" class="form-label">Reiseziel</label>
+        <input
+          id="destination"
+          type="text"
+          class="form-control"
+          placeholder="Zum Beispiel Paris"
+          name="destination"
+          [(ngModel)]="newTrip.destination"
+          required
+        />
+      </div>
+
+      <div class="mb-3">
+        <label for="startDate" class="form-label">
+          Wann beginnt deine Reise?
+        </label>
+        <input
+          id="startDate"
+          type="date"
+          class="form-control"
+          name="startDate"
+          [(ngModel)]="newTrip.startDate"
+          required
+        />
+      </div>
+
+      <div class="mb-3">
+        <label for="endDate" class="form-label">
+          Wann endet deine Reise?
+        </label>
+        <input
+          id="endDate"
+          type="date"
+          class="form-control"
+          name="endDate"
+          [(ngModel)]="newTrip.endDate"
+          required
+        />
+      </div>
+
+      <button type="submit" class="btn btn-primary">
+        Reise speichern
+      </button>
+    </form>
+
+    @if (successMessage) {
+      <div
+        class="alert mt-3"
+        [class.alert-success]="messageType === 'success'"
+        [class.alert-danger]="messageType === 'error'"
+        role="alert"
+      >
+        {{ successMessage }}
+      </div>
+    }
+  </section>
+
+  <section class="trip-list container py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+      <button
+        type="button"
+        class="btn btn-secondary me-2"
+        (click)="goBack()"
+      >
+        ← Zurück
+      </button>
+
+      <h2>Meine Reisen</h2>
+
+      <a routerLink="/home" class="btn btn-outline-primary">
+        Zur Startseite
+      </a>
+    </div>
+
+    @for (trip of trips; track trip.destination) {
+      <article class="trip-card card shadow-sm p-3 mb-3">
+        <h3>{{ trip.destination }}</h3>
+        <p><strong>Von:</strong> {{ trip.startDate }}</p>
+        <p><strong>Bis:</strong> {{ trip.endDate }}</p>
+        <p><strong>Status:</strong> {{ trip.status }}</p>
+      </article>
+    }
+  </section>
+</main>
