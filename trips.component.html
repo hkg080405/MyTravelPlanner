@@ -4,77 +4,183 @@
 </header>
 
 <main class="app-content">
-  <section class="card shadow-sm p-4 mb-4 container">
-    <h2>Wohin möchtest du reisen?</h2>
-    <p class="text-muted">Lege hier eine neue Reise in deinem Travel Planner an.</p>
+    <section class="container mb-4">
+    <div class="row g-4">
 
-    <form (ngSubmit)="addTrip()">
-      <div class="mb-3">
-        <label for="destination" class="form-label">Reiseziel</label>
-        <input id="destination" type="text" class="form-control" placeholder="Zum Beispiel Paris" name="destination"
-          [(ngModel)]="newTrip.destination" required />
+      <!-- Formular für eine neue Reise -->
+      <div class="col-12 col-lg-6">
+        <section class="card shadow-sm h-100 p-4">
+          <h2 class="h4">Neue Reise planen</h2>
+          <p class="text-muted">
+            Lege hier eine neue Reise an.
+          </p>
+
+          <form (ngSubmit)="addTrip()">
+            <div class="mb-3">
+              <label for="destination" class="form-label">
+                Reiseziel
+              </label>
+
+              <input
+                id="destination"
+                type="text"
+                class="form-control"
+                placeholder="Zum Beispiel Paris"
+                name="destination"
+                [(ngModel)]="newTrip.destination"
+                required
+              />
+            </div>
+
+            <div class="mb-3">
+              <label for="startDate" class="form-label">
+                Startdatum
+              </label>
+
+              <input
+                id="startDate"
+                type="date"
+                class="form-control"
+                name="startDate"
+                [(ngModel)]="newTrip.startDate"
+                [min]="today"
+                required
+              />
+            </div>
+
+            <div class="mb-3">
+              <label for="endDate" class="form-label">
+                Enddatum
+              </label>
+
+              <input
+                id="endDate"
+                type="date"
+                class="form-control"
+                name="endDate"
+                [(ngModel)]="newTrip.endDate"
+                [min]="newTrip.startDate || today"
+                required
+              />
+            </div>
+
+            <button type="submit" class="btn btn-primary">
+              Reise speichern
+            </button>
+          </form>
+        </section>
       </div>
 
-      <div class="mb-3">
-        <label for="startDate" class="form-label">Wann beginnt deine Reise?</label>
-        <input id="startDate" type="date" class="form-control" name="startDate" [(ngModel)]="newTrip.startDate"
-          [min]="today" required />
+      <!-- Formular für eine neue Aktivität -->
+      <div class="col-12 col-lg-6">
+        <section class="card shadow-sm h-100 p-4">
+          <h2 class="h4">Neue Aktivität planen</h2>
+          <p class="text-muted">
+            Füge einer Reise eine Aktivität hinzu.
+          </p>
+
+          <form (ngSubmit)="addActivity()">
+            <div class="mb-3">
+              <label for="activityName" class="form-label">
+                Name der Aktivität
+              </label>
+
+              <input
+                id="activityName"
+                type="text"
+                class="form-control"
+                placeholder="Zum Beispiel Stadtführung"
+                name="activityName"
+                [(ngModel)]="newActivity.name"
+                required
+              />
+            </div>
+
+            <div class="mb-3">
+              <label for="activityLocation" class="form-label">
+                Zugehörige Reise
+              </label>
+
+              <select
+                id="activityLocation"
+                class="form-select"
+                name="activityLocation"
+                [(ngModel)]="newActivity.location"
+                required
+              >
+                <option value="" disabled>
+                  Reise auswählen
+                </option>
+
+                @for (trip of trips; track $index) {
+                  <option [value]="trip.destination">
+                    {{ trip.destination }}
+                  </option>
+                }
+              </select>
+            </div>
+
+            <div class="mb-3">
+              <label for="activityDate" class="form-label">
+                Datum
+              </label>
+
+              <input
+                id="activityDate"
+                type="date"
+                class="form-control"
+                name="activityDate"
+                [(ngModel)]="newActivity.date"
+                [min]="selectedTripStartDate"
+                [max]="selectedTripEndDate"
+                required
+              />
+            </div>
+
+            <div class="mb-3">
+              <label for="activityCategory" class="form-label">
+                Kategorie
+              </label>
+
+              <select
+                id="activityCategory"
+                class="form-select"
+                name="activityCategory"
+                [(ngModel)]="newActivity.category"
+                required
+              >
+                <option value="" disabled>
+                  Kategorie auswählen
+                </option>
+                <option value="Sehenswürdigkeit">
+                  Sehenswürdigkeit
+                </option>
+                <option value="Restaurant">
+                  Restaurant
+                </option>
+                <option value="Museum">
+                  Museum
+                </option>
+                <option value="Ausflug">
+                  Ausflug
+                </option>
+                <option value="Shopping">
+                  Shopping
+                </option>
+              </select>
+            </div>
+
+            <button type="submit" class="btn btn-primary">
+              Aktivität speichern
+            </button>
+          </form>
+        </section>
       </div>
 
-      <div class="mb-3">
-        <label for="endDate" class="form-label">Wann endet deine Reise?</label>
-        <input id="endDate" type="date" class="form-control" name="endDate" [(ngModel)]="newTrip.endDate"
-          [min]="newTrip.startDate || today" required />
-      </div>
-
-      <button type="submit" class="btn btn-primary">Reise speichern</button>
-    </form>
+    </div>
   </section>
 
-  <section class="card shadow-sm p-4 mb-4 container">
-    <h2>Neue Aktivität planen</h2>
-    <p class="text-muted">Plane hier eine Aktivität für eine deiner Reisen.</p>
-
-    <form (ngSubmit)="addActivity()">
-      <div class="mb-3">
-        <label for="activityName" class="form-label">Name der Aktivität</label>
-        <input id="activityName" type="text" class="form-control" placeholder="Zum Beispiel Stadtführung"
-          name="activityName" [(ngModel)]="newActivity.name" required />
-      </div>
-
-      <div class="mb-3">
-        <label for="activityLocation" class="form-label">Reiseziel</label>
-        <select id="activityLocation" class="form-select" name="activityLocation" [(ngModel)]="newActivity.location"
-          required>
-          <option value="" disabled>Reise auswählen</option>
-          @for (trip of trips; track $index) {
-          <option [value]="trip.destination">{{ trip.destination }}</option>
-          }
-        </select>
-      </div>
-
-      <div class="mb-3">
-        <label for="activityDate" class="form-label">Datum</label>
-        <input id="activityDate" type="date" class="form-control" name="activityDate" [(ngModel)]="newActivity.date"
-          [min]="selectedTripStartDate" [max]="selectedTripEndDate" required />
-      </div>
-
-      <div class="mb-3">
-        <label for="activityCategory" class="form-label">Kategorie</label>
-        <select id="activityCategory" class="form-select" name="activityCategory" [(ngModel)]="newActivity.category"
-          required>
-          <option value="" disabled>Kategorie auswählen</option>
-          <option value="Sehenswürdigkeit">Sehenswürdigkeit</option>
-          <option value="Restaurant">Restaurant</option>
-          <option value="Museum">Museum</option>
-          <option value="Ausflug">Ausflug</option>
-          <option value="Shopping">Shopping</option>
-        </select>
-      </div>
-
-      <button type="submit" class="btn btn-primary">Aktivität speichern</button>
-    </form>
-  </section>
+  
 
   @if (successMessage) {
   <div class="container alert" [class.alert-success]="messageType === 'success'"
@@ -107,9 +213,22 @@
         <p class="mb-1"><strong>Kategorie:</strong> {{ activity.category }}</p>
         <p class="mb-0"><strong>Status:</strong> {{ activity.status }}</p>
 
-        <button type="button" class="btn btn-outline-secondary btn-sm mt-2" (click)="editActivity(activity, $index)">
+        <button
+          type="button"
+          class="btn btn-outline-secondary btn-sm mt-2"
+          (click)="editActivity(activity, $index)"
+        >
           Aktivität bearbeiten
         </button>
+
+        <button
+          type="button"
+          class="btn btn-outline-danger btn-sm mt-2 ms-2"
+          (click)="deleteActivity($index)"
+        >
+          Aktivität löschen
+        </button>
+
 
       </div>
       }

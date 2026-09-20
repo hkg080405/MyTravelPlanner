@@ -299,6 +299,19 @@ export class TripsComponent {
     this.showSuccess('Reise wurde gelöscht.');
   }
 
+  deleteActivity(index: number): void {
+    const confirmed = window.confirm(
+      'Möchtest du diese Aktivität wirklich löschen?'
+    );
+
+    if (!confirmed) {
+      return;
+    }
+
+    this.activities.splice(index, 1);
+    this.showSuccess('Aktivität wurde gelöscht.');
+  }
+
   closeEditModal(): void {
     this.isEditModalOpen = false;
     this.editingIndex = null;

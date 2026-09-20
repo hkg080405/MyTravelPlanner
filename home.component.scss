@@ -1,0 +1,49 @@
+.app-header {
+  padding: 2.5rem 1rem 2rem;
+  margin-bottom: 2rem;
+  text-align: center;
+  background: linear-gradient(135deg, #fce4ec, #ede7f6);
+  border-radius: 0 0 2rem 2rem;
+}
+
+.app-header h1 {
+  margin-bottom: 0.5rem;
+  color: #6a4c7c;
+  font-weight: 700;
+}
+
+.app-header p {
+  margin-bottom: 0;
+  color: #765f80;
+}
+
+.app-content {
+  padding: 0 1rem 2rem;
+}
+
+.welcome-card {
+  max-width: 700px;
+  margin: 0 auto;
+  border: 1px solid #f1d9e8;
+  border-radius: 1.25rem;
+  background-color: #fffaff;
+}
+
+.welcome-card h2 {
+  color: #6a4c7c;
+  font-weight: 700;
+}
+
+.welcome-card p {
+  color: #765f80;
+}
+
+.btn-primary {
+  background-color: #c77dba;
+  border-color: #c77dba;
+}
+
+.btn-primary:hover {
+  background-color: #ad65a1;
+  border-color: #ad65a1;
+}
