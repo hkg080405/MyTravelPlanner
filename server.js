@@ -1,8 +1,15 @@
 const express = require('express');
 const cors = require('cors');
+require('dotenv').config();
+const { MongoClient } = require('mongodb');
+
 
 const app = express();
 const PORT = 3000;
+
+const client = new MongoClient(process.env.MONGODB_URI);
+let db;
+
 
 const trips = [
   {
@@ -49,9 +56,21 @@ app.get('/api/health', (req, res) => {
   });
 });
 
-app.get('/api/trips', (req, res) => {
-  res.json(trips);
+app.get('/api/trips', async (req, res) => {
+  try {
+    const tripsFromDatabase = await db
+      .collection('trips')
+      .find({})
+      .toArray();
+
+    res.json(tripsFromDatabase);
+  } catch (error) {
+    res.status(500).json({
+      message: 'Reisen konnten nicht geladen werden.'
+    });
+  }
 });
+
 
 app.get('/api/activities', (req, res) => {
   res.json(activities);
@@ -105,32 +124,50 @@ app.post('/api/activities', (req, res) => {
   res.status(201).json(newActivity);
 });
 
-app.post('/api/trips', (req, res) => {
-  const { destination, startDate, endDate, status } = req.body;
+app.post('/api/trips', async (req, res) => {
+  try {
+    const {
+      destination,
+      startDate,
+      endDate,
+      status
+    } = req.body;
 
-  if (!destination || !startDate || !endDate) {
-    return res.status(400).json({
-      message: 'Reiseziel, Startdatum und Enddatum sind erforderlich.'
+    if (!destination || !startDate || !endDate) {
+      return res.status(400).json({
+        message: 'Reiseziel, Startdatum und Enddatum sind erforderlich.'
+      });
+    }
+
+    if (endDate < startDate) {
+      return res.status(400).json({
+        message: 'Das Enddatum darf nicht vor dem Startdatum liegen.'
+      });
+    }
+
+    const lastTrip = await db
+      .collection('trips')
+      .find({})
+      .sort({ id: -1 })
+      .limit(1)
+      .next();
+
+    const newTrip = {
+      id: lastTrip ? lastTrip.id + 1 : 1,
+      destination,
+      startDate,
+      endDate,
+      status: status || 'Geplant'
+    };
+
+    await db.collection('trips').insertOne(newTrip);
+
+    res.status(201).json(newTrip);
+  } catch (error) {
+    res.status(500).json({
+      message: 'Reise konnte nicht gespeichert werden.'
     });
   }
-
-  if (endDate < startDate) {
-    return res.status(400).json({
-      message: 'Das Enddatum darf nicht vor dem Startdatum liegen.'
-    });
-  }
-
-  const newTrip = {
-    id: trips.length + 1,
-    destination,
-    startDate,
-    endDate,
-    status: status || 'Geplant'
-  };
-
-  trips.push(newTrip);
-
-  res.status(201).json(newTrip);
 });
 
 app.delete('/api/trips/:id', (req, res) => {
@@ -261,6 +298,20 @@ app.put('/api/activities/:id', (req, res) => {
   res.json(activity);
 });
 
-app.listen(PORT, () => {
-  console.log(`Backend läuft auf http://localhost:${PORT}` );
-});
+async function startServer() {
+  try {
+    await client.connect();
+
+    db = client.db(process.env.DB_NAME);
+
+    console.log('MongoDB-Verbindung im Server funktioniert.');
+
+    app.listen(PORT, () => {
+      console.log(`Backend läuft auf http://localhost:${PORT}` );
+    });
+  } catch (error) {
+    console.error('MongoDB-Verbindung fehlgeschlagen:', error.message);
+  }
+}
+
+startServer();
