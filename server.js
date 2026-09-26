@@ -72,57 +72,82 @@ app.get('/api/trips', async (req, res) => {
 });
 
 
-app.get('/api/activities', (req, res) => {
-  res.json(activities);
+app.get('/api/activities', async (req, res) => {
+  try {
+    const activitiesFromDatabase = await db
+      .collection('activities')
+      .find({})
+      .toArray();
+
+    res.json(activitiesFromDatabase);
+  } catch (error) {
+    res.status(500).json({
+      message: 'Aktivitäten konnten nicht geladen werden.'
+    });
+  }
 });
 
-app.post('/api/activities', (req, res) => {
-  const {
-    name,
-    location,
-    date,
-    category,
-    status
-  } = req.body;
+app.post('/api/activities', async (req, res) => {
+  try {
+    const {
+      name,
+      location,
+      date,
+      category,
+      status
+    } = req.body;
 
-  if (!name || !location || !date || !category) {
-    return res.status(400).json({
-      message: 'Name, Reise, Datum und Kategorie sind erforderlich.'
+    if (!name || !location || !date || !category) {
+      return res.status(400).json({
+        message: 'Name, Reise, Datum und Kategorie sind erforderlich.'
+      });
+    }
+
+    const selectedTrip = await db.collection('trips').findOne({
+      destination: location
+    });
+
+    if (!selectedTrip) {
+      return res.status(400).json({
+        message: 'Die zugehörige Reise wurde nicht gefunden.'
+      });
+    }
+
+    if (
+      date < selectedTrip.startDate ||
+      date > selectedTrip.endDate
+    ) {
+      return res.status(400).json({
+        message: 'Das Aktivitätsdatum muss innerhalb des Reisezeitraums liegen.'
+      });
+    }
+
+    const lastActivity = await db
+      .collection('activities')
+      .find({})
+      .sort({ id: -1 })
+      .limit(1)
+      .next();
+
+    const newActivity = {
+      id: lastActivity ? lastActivity.id + 1 : 1,
+      name,
+      location,
+      date,
+      category,
+      status: status || 'Geplant'
+    };
+
+    await db.collection('activities').insertOne(newActivity);
+
+    res.status(201).json(newActivity);
+  } catch (error) {
+    res.status(500).json({
+      message: 'Aktivität konnte nicht gespeichert werden.'
     });
   }
-
-  const selectedTrip = trips.find(
-    trip => trip.destination === location
-  );
-
-  if (!selectedTrip) {
-    return res.status(400).json({
-      message: 'Die zugehörige Reise wurde nicht gefunden.'
-    });
-  }
-
-  if (
-    date < selectedTrip.startDate ||
-    date > selectedTrip.endDate
-  ) {
-    return res.status(400).json({
-      message: 'Das Aktivitätsdatum muss innerhalb des Reisezeitraums liegen.'
-    });
-  }
-
-  const newActivity = {
-    id: activities.length + 1,
-    name,
-    location,
-    date,
-    category,
-    status: status || 'Geplant'
-  };
-
-  activities.push(newActivity);
-
-  res.status(201).json(newActivity);
 });
+
 
 app.post('/api/trips', async (req, res) => {
   try {
@@ -170,133 +195,179 @@ app.post('/api/trips', async (req, res) => {
   }
 });
 
-app.delete('/api/trips/:id', (req, res) => {
-  const tripId = Number(req.params.id);
+app.delete('/api/trips/:id', async (req, res) => {
+  try {
+    const tripId = Number(req.params.id);
 
-  const tripIndex = trips.findIndex(trip => trip.id === tripId);
+    const result = await db.collection('trips').findOneAndDelete({
+      id: tripId
+    });
 
-  if (tripIndex === -1) {
-    return res.status(404).json({
-      message: 'Reise wurde nicht gefunden.'
+    if (!result.value) {
+      return res.status(404).json({
+        message: 'Reise wurde nicht gefunden.'
+      });
+    }
+
+    res.json({
+      message: 'Reise wurde gelöscht.',
+      trip: result.value
+    });
+  } catch (error) {
+    res.status(500).json({
+      message: 'Reise konnte nicht gelöscht werden.'
     });
   }
-
-  const deletedTrip = trips.splice(tripIndex, 1)[0];
-
-  res.json({
-    message: 'Reise wurde gelöscht.',
-    trip: deletedTrip
-  });
 });
 
-app.put('/api/trips/:id', (req, res) => {
-  const tripId = Number(req.params.id);
+app.put('/api/trips/:id', async (req, res) => {
+  try {
+    const tripId = Number(req.params.id);
 
-  const trip = trips.find(trip => trip.id === tripId);
+    const {
+      destination,
+      startDate,
+      endDate,
+      status
+    } = req.body;
 
-  if (!trip) {
-    return res.status(404).json({
-      message: 'Reise wurde nicht gefunden.'
+    if (!destination || !startDate || !endDate) {
+      return res.status(400).json({
+        message: 'Reiseziel, Startdatum und Enddatum sind erforderlich.'
+      });
+    }
+
+    if (endDate < startDate) {
+      return res.status(400).json({
+        message: 'Das Enddatum darf nicht vor dem Startdatum liegen.'
+      });
+    }
+
+    const result = await db.collection('trips').updateOne(
+      { id: tripId },
+      {
+        $set: {
+          destination,
+          startDate,
+          endDate,
+          status: status || 'Geplant'
+        }
+      }
+    );
+
+    if (result.matchedCount === 0) {
+      return res.status(404).json({
+        message: 'Reise wurde nicht gefunden.'
+      });
+    }
+
+    const updatedTrip = await db.collection('trips').findOne({
+      id: tripId
+    });
+
+    res.json(updatedTrip);
+  } catch (error) {
+    res.status(500).json({
+      message: 'Reise konnte nicht aktualisiert werden.'
     });
   }
-
-  const { destination, startDate, endDate, status } = req.body;
-
-  if (!destination || !startDate || !endDate) {
-    return res.status(400).json({
-      message: 'Reiseziel, Startdatum und Enddatum sind erforderlich.'
-    });
-  }
-
-  if (endDate < startDate) {
-    return res.status(400).json({
-      message: 'Das Enddatum darf nicht vor dem Startdatum liegen.'
-    });
-  }
-
-  trip.destination = destination;
-  trip.startDate = startDate;
-  trip.endDate = endDate;
-  trip.status = status || trip.status;
-
-  res.json(trip);
 });
 
-app.delete('/api/activities/:id', (req, res) => {
-  const activityId = Number(req.params.id);
+app.delete('/api/activities/:id', async (req, res) => {
+  try {
+    const activityId = Number(req.params.id);
 
-  const activityIndex = activities.findIndex(
-    activity => activity.id === activityId
-  );
+    const result = await db.collection('activities').findOneAndDelete({
+      id: activityId
+    });
 
-  if (activityIndex === -1) {
-    return res.status(404).json({
-      message: 'Aktivität wurde nicht gefunden.'
+    if (!result.value) {
+      return res.status(404).json({
+        message: 'Aktivität wurde nicht gefunden.'
+      });
+    }
+
+    res.json({
+      message: 'Aktivität wurde gelöscht.',
+      activity: result.value
+    });
+  } catch (error) {
+    res.status(500).json({
+      message: 'Aktivität konnte nicht gelöscht werden.'
     });
   }
-
-  const deletedActivity = activities.splice(activityIndex, 1)[0];
-
-  res.json({
-    message: 'Aktivität wurde gelöscht.',
-    activity: deletedActivity
-  });
 });
 
-app.put('/api/activities/:id', (req, res) => {
-  const activityId = Number(req.params.id);
 
-  const activity = activities.find(
-    activity => activity.id === activityId
-  );
+app.put('/api/activities/:id', async (req, res) => {
+  try {
+    const activityId = Number(req.params.id);
 
-  if (!activity) {
-    return res.status(404).json({
-      message: 'Aktivität wurde nicht gefunden.'
+    const {
+      name,
+      location,
+      date,
+      category,
+      status
+    } = req.body;
+
+    if (!name || !location || !date || !category) {
+      return res.status(400).json({
+        message: 'Name, Reise, Datum und Kategorie sind erforderlich.'
+      });
+    }
+
+    const selectedTrip = await db.collection('trips').findOne({
+      destination: location
+    });
+
+    if (!selectedTrip) {
+      return res.status(400).json({
+        message: 'Die zugehörige Reise wurde nicht gefunden.'
+      });
+    }
+
+    if (
+      date < selectedTrip.startDate ||
+      date > selectedTrip.endDate
+    ) {
+      return res.status(400).json({
+        message: 'Das Aktivitätsdatum muss innerhalb des Reisezeitraums liegen.'
+      });
+    }
+
+    const result = await db.collection('activities').updateOne(
+      { id: activityId },
+      {
+        $set: {
+          name,
+          location,
+          date,
+          category,
+          status: status || 'Geplant'
+        }
+      }
+    );
+
+    if (result.matchedCount === 0) {
+      return res.status(404).json({
+        message: 'Aktivität wurde nicht gefunden.'
+      });
+    }
+
+    const updatedActivity = await db.collection('activities').findOne({
+      id: activityId
+    });
+
+    res.json(updatedActivity);
+  } catch (error) {
+    res.status(500).json({
+      message: 'Aktivität konnte nicht aktualisiert werden.'
     });
   }
-
-  const {
-    name,
-    location,
-    date,
-    category,
-    status
-  } = req.body;
-
-  if (!name || !location || !date || !category) {
-    return res.status(400).json({
-      message: 'Name, Reise, Datum und Kategorie sind erforderlich.'
-    });
-  }
-
-  const selectedTrip = trips.find(
-    trip => trip.destination === location
-  );
-
-  if (!selectedTrip) {
-    return res.status(400).json({
-      message: 'Die zugehörige Reise wurde nicht gefunden.'
-    });
-  }
-
-  if (
-    date < selectedTrip.startDate ||
-    date > selectedTrip.endDate
-  ) {
-    return res.status(400).json({
-      message: 'Das Aktivitätsdatum muss innerhalb des Reisezeitraums liegen.'
-    });
-  }
-
-  activity.name = name;
-  activity.location = location;
-  activity.date = date;
-  activity.category = category;
-  activity.status = status || activity.status;
-
-  res.json(activity);
 });
+
+
 
 async function startServer() {
   try {
