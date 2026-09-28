@@ -337,7 +337,6 @@ Der Code wurde lokal ausgeführt und getestet. Die wichtigsten Zusammenhänge de
 - Die Daten sind nicht einzelnen Nutzerinnen zugeordnet.
 - Der Status wird manuell gesetzt.
 - Das Backend läuft lokal unter `localhost:3000`.
-- Die Anwendung ist aktuell nicht produktiv deployed.
 
 Die Anwendung wurde als Einzelprojekt entwickelt. Die Login- und Benutzerzuordnung ist in der Aufgabenstellung nur für Projekte mit zwei Studentinnen erforderlich.
 
@@ -350,7 +349,6 @@ Die Anwendung wurde als Einzelprojekt entwickelt. Die Login- und Benutzerzuordnu
 - Kartenansicht für Reiseziele
 - automatische Statusberechnung
 - Deployment von Frontend, Backend und Datenbank
-- eigene TypeScript-Interfaces anstelle von `any`
 
 ## 🔐 Sicherheitshinweis
 
