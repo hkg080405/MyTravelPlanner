@@ -1,7 +1,8 @@
 import { Location } from '@angular/common';
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
+import { ApiService } from '../../services/api.service';
 
 @Component({
   selector: 'app-trips',
@@ -9,38 +10,9 @@ import { RouterLink } from '@angular/router';
   templateUrl: './trips.component.html',
   styleUrl: './trips.component.scss'
 })
-export class TripsComponent {
-  trips = [
-    {
-      destination: 'Barcelona',
-      startDate: '2026-10-10',
-      endDate: '2026-10-15',
-      status: 'Geplant'
-    },
-    {
-      destination: 'Rom',
-      startDate: '2026-11-05',
-      endDate: '2026-11-10',
-      status: 'Aktiv'
-    }
-  ];
-
-  activities = [
-    {
-      name: 'Sagrada Família besichtigen',
-      location: 'Barcelona',
-      date: '2026-10-11',
-      category: 'Sehenswürdigkeit',
-      status: 'Geplant'
-    },
-    {
-      name: 'Kolosseum besuchen',
-      location: 'Rom',
-      date: '2026-11-06',
-      category: 'Museum',
-      status: 'Geplant'
-    }
-  ];
+export class TripsComponent implements OnInit {
+  trips: any[] = [];
+  activities: any[] = [];
 
   newActivity = {
     name: '',
@@ -74,12 +46,37 @@ export class TripsComponent {
 
   editingActivityIndex: number | null = null;
   isActivityEditModalOpen = false;
+
   editingIndex: number | null = null;
   isEditModalOpen = false;
+
   successMessage = '';
   messageType: 'success' | 'error' = 'success';
 
-  constructor(private location: Location) { }
+  constructor(
+    private location: Location,
+    private apiService: ApiService
+  ) {}
+
+  ngOnInit(): void {
+    this.apiService.getTrips().subscribe({
+      next: (trips) => {
+        this.trips = trips;
+      },
+      error: () => {
+        this.showError('Reisen konnten nicht geladen werden.');
+      }
+    });
+
+    this.apiService.getActivities().subscribe({
+      next: (activities) => {
+        this.activities = activities;
+      },
+      error: () => {
+        this.showError('Aktivitäten konnten nicht geladen werden.');
+      }
+    });
+  }
 
   get today(): string {
     return new Date().toISOString().split('T')[0];
@@ -116,19 +113,34 @@ export class TripsComponent {
       return;
     }
 
-    if (!this.isDateRangeValid(this.newTrip.startDate, this.newTrip.endDate)) {
+    if (
+      !this.isDateRangeValid(
+        this.newTrip.startDate,
+        this.newTrip.endDate
+      )
+    ) {
       return;
     }
 
-    this.trips.push({ ...this.newTrip });
-    this.showSuccess('Reise wurde hinzugefügt.');
+    this.apiService.createTrip(this.newTrip).subscribe({
+      next: (createdTrip) => {
+        this.trips.push(createdTrip);
+        this.showSuccess('Reise wurde hinzugefügt.');
 
-    this.newTrip = {
-      destination: '',
-      startDate: '',
-      endDate: '',
-      status: 'Geplant'
-    };
+        this.newTrip = {
+          destination: '',
+          startDate: '',
+          endDate: '',
+          status: 'Geplant'
+        };
+      },
+      error: (error) => {
+        this.showError(
+          error.error?.message ||
+          'Reise konnte nicht gespeichert werden.'
+        );
+      }
+    });
   }
 
   addActivity(): void {
@@ -158,8 +170,10 @@ export class TripsComponent {
 
     if (
       selectedTrip &&
-      (this.newActivity.date < selectedTrip.startDate ||
-        this.newActivity.date > selectedTrip.endDate)
+      (
+        this.newActivity.date < selectedTrip.startDate ||
+        this.newActivity.date > selectedTrip.endDate
+      )
     ) {
       this.showError(
         'Das Aktivitätsdatum muss innerhalb des Reisezeitraums liegen.'
@@ -167,26 +181,30 @@ export class TripsComponent {
       return;
     }
 
-    this.activities.push({ ...this.newActivity });
-    this.showSuccess('Aktivität wurde hinzugefügt.');
+    this.apiService.createActivity(this.newActivity).subscribe({
+      next: (createdActivity) => {
+        this.activities.push(createdActivity);
+        this.showSuccess('Aktivität wurde hinzugefügt.');
 
-    this.newActivity = {
-      name: '',
-      location: '',
-      date: '',
-      category: '',
-      status: 'Geplant'
-    };
+        this.newActivity = {
+          name: '',
+          location: '',
+          date: '',
+          category: '',
+          status: 'Geplant'
+        };
+      },
+      error: (error) => {
+        this.showError(
+          error.error?.message ||
+          'Aktivität konnte nicht gespeichert werden.'
+        );
+      }
+    });
   }
 
   editActivity(
-    activity: {
-      name: string;
-      location: string;
-      date: string;
-      category: string;
-      status: string;
-    },
+    activity: any,
     index: number
   ): void {
     this.editingActivityIndex = index;
@@ -222,8 +240,10 @@ export class TripsComponent {
 
     if (
       selectedTrip &&
-      (this.editActivityData.date < selectedTrip.startDate ||
-        this.editActivityData.date > selectedTrip.endDate)
+      (
+        this.editActivityData.date < selectedTrip.startDate ||
+        this.editActivityData.date > selectedTrip.endDate
+      )
     ) {
       this.showError(
         'Das Aktivitätsdatum muss innerhalb des Reisezeitraums liegen.'
@@ -235,12 +255,25 @@ export class TripsComponent {
       return;
     }
 
-    this.activities[this.editingActivityIndex] = {
-      ...this.editActivityData
-    };
+    const activityId =
+      this.activities[this.editingActivityIndex].id;
 
-    this.closeActivityModal();
-    this.showSuccess('Aktivität wurde aktualisiert.');
+    this.apiService.updateActivity(
+      activityId,
+      this.editActivityData
+    ).subscribe({
+      next: (updatedActivity) => {
+        this.activities[this.editingActivityIndex!] = updatedActivity;
+        this.closeActivityModal();
+        this.showSuccess('Aktivität wurde aktualisiert.');
+      },
+      error: (error) => {
+        this.showError(
+          error.error?.message ||
+          'Aktivität konnte nicht aktualisiert werden.'
+        );
+      }
+    });
   }
 
   closeActivityModal(): void {
@@ -248,14 +281,8 @@ export class TripsComponent {
     this.editingActivityIndex = null;
   }
 
-
   editTrip(
-    trip: {
-      destination: string;
-      startDate: string;
-      endDate: string;
-      status: string;
-    },
+    trip: any,
     index: number
   ): void {
     this.editingIndex = index;
@@ -275,7 +302,12 @@ export class TripsComponent {
       return;
     }
 
-    if (!this.isDateRangeValid(this.editTripData.startDate, this.editTripData.endDate)) {
+    if (
+      !this.isDateRangeValid(
+        this.editTripData.startDate,
+        this.editTripData.endDate
+      )
+    ) {
       return;
     }
 
@@ -283,20 +315,49 @@ export class TripsComponent {
       return;
     }
 
-    this.trips[this.editingIndex] = { ...this.editTripData };
-    this.closeEditModal();
-    this.showSuccess('Reise wurde aktualisiert.');
+    const tripId = this.trips[this.editingIndex].id;
+
+    this.apiService.updateTrip(
+      tripId,
+      this.editTripData
+    ).subscribe({
+      next: (updatedTrip) => {
+        this.trips[this.editingIndex!] = updatedTrip;
+        this.closeEditModal();
+        this.showSuccess('Reise wurde aktualisiert.');
+      },
+      error: (error) => {
+        this.showError(
+          error.error?.message ||
+          'Reise konnte nicht aktualisiert werden.'
+        );
+      }
+    });
   }
 
   deleteTrip(index: number): void {
-    const confirmed = window.confirm('Möchtest du diese Reise wirklich löschen?');
+    const confirmed = window.confirm(
+      'Möchtest du diese Reise wirklich löschen?'
+    );
 
     if (!confirmed) {
       return;
     }
 
-    this.trips.splice(index, 1);
-    this.showSuccess('Reise wurde gelöscht.');
+    const tripId = this.trips[index].id;
+
+    this.apiService.deleteTrip(tripId).subscribe({
+      next: () => {
+        this.trips.splice(index, 1);
+        this.showSuccess('Reise wurde gelöscht.');
+      },
+      error: (error) => {
+        this.showError(
+          error.error?.message ||
+          'Reise konnte nicht gelöscht werden.'
+        );
+      }
+    });
   }
 
   deleteActivity(index: number): void {
@@ -308,8 +369,20 @@ export class TripsComponent {
       return;
     }
 
-    this.activities.splice(index, 1);
-    this.showSuccess('Aktivität wurde gelöscht.');
+    const activityId = this.activities[index].id;
+
+    this.apiService.deleteActivity(activityId).subscribe({
+      next: () => {
+        this.activities.splice(index, 1);
+        this.showSuccess('Aktivität wurde gelöscht.');
+      },
+      error: (error) => {
+        this.showError(
+          error.error?.message ||
+          'Aktivität konnte nicht gelöscht werden.'
+        );
+      }
+    });
   }
 
   closeEditModal(): void {
@@ -317,14 +390,21 @@ export class TripsComponent {
     this.editingIndex = null;
   }
 
-  private isDateRangeValid(startDate: string, endDate: string): boolean {
+  private isDateRangeValid(
+    startDate: string,
+    endDate: string
+  ): boolean {
     if (startDate < this.today) {
-      this.showError('Das Startdatum darf nicht in der Vergangenheit liegen.');
+      this.showError(
+        'Das Startdatum darf nicht in der Vergangenheit liegen.'
+      );
       return false;
     }
 
     if (endDate < startDate) {
-      this.showError('Das Enddatum darf nicht vor dem Startdatum liegen.');
+      this.showError(
+        'Das Enddatum darf nicht vor dem Startdatum liegen.'
+      );
       return false;
     }
 
