@@ -4,28 +4,6 @@ Eine moderne Webanwendung zur Planung und Organisation von Reisen und Aktivität
 
 Der **Travel Planner** wurde als Semesteraufgabe im Modul **WebTech an der HTW Berlin** entwickelt. Nutzerinnen können Reisen und dazugehörige Aktivitäten erstellen, anzeigen, bearbeiten und löschen.
 
-## 📸 Screenshots
-
-> Die Screenshots werden im Repository unter `docs/screenshots/` gespeichert.
-
-### Startseite
-
-![Startseite](MyTravelPlanner/Screenshots/Startseite.png)
-
-### Reise- und Aktivitätsübersicht
-
-![Reiseübersicht](MyTravelPlanner/Screenshots/Reise- und Aktivitätsübersicht.png)
-
-### Neue Reise erstellen und neue Aktivität erstellen
-
-![Reise erstellen](MyTravelPlanner/Screenshots/Neue Reise erstellen und neue Aktivität erstellen.png)
-
-### Bearbeiten und Validierung
-
-![Bearbeiten](docs/screenshots/Bearbeiten.png)
-
-![Validierung](docs/screenshots/Validierung.png)
-
 ## ✨ Features
 
 ### 🧳 Reisen
