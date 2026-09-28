@@ -20,8 +20,6 @@ Der **Travel Planner** wurde als Semesteraufgabe im Modul **WebTech an der HTW B
 
 ![Reise erstellen](docs/screenshots/03-reise-erstellen.png)
 
-![Aktivität erstellen](docs/screenshots/04-aktivitaet-erstellen.png)
-
 ### Bearbeiten und Validierung
 
 ![Bearbeiten](docs/screenshots/05-bearbeiten.png)
