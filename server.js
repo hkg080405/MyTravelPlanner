@@ -199,11 +199,11 @@ app.delete('/api/trips/:id', async (req, res) => {
   try {
     const tripId = Number(req.params.id);
 
-    const result = await db.collection('trips').findOneAndDelete({
+    const deletedTrip = await db.collection('trips').findOneAndDelete({
       id: tripId
     });
 
-    if (!result.value) {
+    if (!deletedTrip) {
       return res.status(404).json({
         message: 'Reise wurde nicht gefunden.'
       });
@@ -211,14 +211,17 @@ app.delete('/api/trips/:id', async (req, res) => {
 
     res.json({
       message: 'Reise wurde gelöscht.',
-      trip: result.value
+      trip: deletedTrip
     });
   } catch (error) {
+    console.error(error);
+
     res.status(500).json({
       message: 'Reise konnte nicht gelöscht werden.'
     });
   }
 });
+
 
 app.put('/api/trips/:id', async (req, res) => {
   try {
@@ -277,11 +280,13 @@ app.delete('/api/activities/:id', async (req, res) => {
   try {
     const activityId = Number(req.params.id);
 
-    const result = await db.collection('activities').findOneAndDelete({
-      id: activityId
-    });
+    const deletedActivity = await db
+      .collection('activities')
+      .findOneAndDelete({
+        id: activityId
+      });
 
-    if (!result.value) {
+    if (!deletedActivity) {
       return res.status(404).json({
         message: 'Aktivität wurde nicht gefunden.'
       });
@@ -289,14 +294,17 @@ app.delete('/api/activities/:id', async (req, res) => {
 
     res.json({
       message: 'Aktivität wurde gelöscht.',
-      activity: result.value
+      activity: deletedActivity
     });
   } catch (error) {
+    console.error(error);
+
     res.status(500).json({
       message: 'Aktivität konnte nicht gelöscht werden.'
     });
   }
 });
+
 
 
 app.put('/api/activities/:id', async (req, res) => {
