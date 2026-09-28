@@ -10,21 +10,21 @@ Der **Travel Planner** wurde als Semesteraufgabe im Modul **WebTech an der HTW B
 
 ### Startseite
 
-![Startseite](docs/screenshots/01-startseite.png)
+![Startseite](MyTravelPlanner/Screenshots/Startseite.png)
 
 ### Reise- und Aktivitätsübersicht
 
-![Reiseübersicht](docs/screenshots/02-reise-uebersicht.png)
+![Reiseübersicht](MyTravelPlanner/Screenshots/Reise- und Aktivitätsübersicht.png)
 
 ### Neue Reise erstellen und neue Aktivität erstellen
 
-![Reise erstellen](docs/screenshots/03-reise-erstellen.png)
+![Reise erstellen](MyTravelPlanner/Screenshots/Neue Reise erstellen und neue Aktivität erstellen.png)
 
 ### Bearbeiten und Validierung
 
-![Bearbeiten](docs/screenshots/05-bearbeiten.png)
+![Bearbeiten](docs/screenshots/Bearbeiten.png)
 
-![Validierung](docs/screenshots/06-validierung.png)
+![Validierung](docs/screenshots/Validierung.png)
 
 ## ✨ Features
 
